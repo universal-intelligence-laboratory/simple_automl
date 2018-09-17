@@ -14,11 +14,13 @@ class example_policy:
     
     def next_step(self,reports,num_of_process):
         solution = make_empty_solution()
-        if num_of_process<self.max_num_of_process:
+        if num_of_process<self.max_num_of_process and not self.stop_policy():
             settings = make_empty_settings()
             solution['start_list'].append(settings)
         return solution
 
+    def stop_policy(self):
+        return False
 
 def deepcopy(d):
     new_d = {}
@@ -37,12 +39,15 @@ def make_empty_settings():
     return settings
 
 class executer:
-    def __init__(self,mode='initial',max_exp = 2):
+    def __init__(self,max_exp,mode='initial'):
         if mode == 'initial':
             self.reports_history = {}
             self.settings = {}
             self.running_process = {}
             self.P = example_policy(max_exp)
+        elif mode == 'restore':
+            pass
+            # TODO: restore training proceduce with pickles
 
     def phase_setting(self,experments_setting):
         return experments_setting
@@ -50,13 +55,11 @@ class executer:
     def start_exp(self,experments_setting,traget_py_name = 'train.py'):
         # call train.py here
         string = self.phase_setting(experments_setting)
-        #command = 'ping 192.168.1.1 '
+        #command = 'ping 192.168.1.1 ' # for debugging
         command = 'python ' + traget_py_name + string
         proc = subprocess.Popen(command, shell=True,stdout=subprocess.PIPE)
         self.running_process[proc.pid] = proc
         self.reports_history[proc.pid] = []
-        # return pid 
-        #time.sleep(20) #wait until build
         print("Start: "+command + " with PID: " + str(proc.pid))
         return proc.pid
     
@@ -117,5 +120,5 @@ class executer:
 
 if __name__ == '__main__':
     datasets.MNIST('./data', train=True, download=True)
-    e = executer()
+    e = executer(max_exp=2)
     e.start()
