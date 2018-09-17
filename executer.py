@@ -67,10 +67,11 @@ class executer:
         #command = 'ping 192.168.1.1 ' # for debugging
         command = 'python ' + traget_py_name + string
         proc = subprocess.Popen(command, shell=True,stdout=subprocess.PIPE)
-        self.running_process[proc.pid] = proc
-        self.reports_history[proc.pid] = []
-        print("Start: "+command + " with PID: " + str(proc.pid))
-        return proc.pid
+        pid = proc.pid
+        self.running_process[pid] = proc
+        self.reports_history[pid] = []
+        print("Start: "+command + " with PID: " + str(pid))
+        return pid
     
     def react_with_reports(self,reports, pid):
         self.reports_history[pid].append(reports)
