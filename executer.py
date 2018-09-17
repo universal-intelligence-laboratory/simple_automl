@@ -12,11 +12,17 @@ class example_policy:
     def __init__(self, max_num_of_process):
         self.max_num_of_process = max_num_of_process
     
-    def next_step(self,reports,num_of_process):
+    def next_step(self,report,num_of_process,pid):
+        #print("RRRRRRR",report)
+        
         solution = make_empty_solution()
         if num_of_process<self.max_num_of_process and not self.stop_policy():
             settings = make_empty_settings()
             solution['start_list'].append(settings)
+            
+        if ' 2' in report:
+            solution['stop_list'].append(pid)
+                    
         return solution
 
     def stop_policy(self):
@@ -55,8 +61,8 @@ class executer:
     def start_exp(self,experments_setting,traget_py_name = 'train.py'):
         # call train.py here
         string = self.phase_setting(experments_setting)
-        #command = 'ping 192.168.1.1 ' # for debugging
-        command = 'python ' + traget_py_name + string
+        command = 'ping 192.168.1.1 ' # for debugging
+        #command = 'python ' + traget_py_name + string
         proc = subprocess.Popen(command, shell=True,stdout=subprocess.PIPE)
         self.running_process[proc.pid] = proc
         self.reports_history[proc.pid] = []
@@ -64,9 +70,9 @@ class executer:
         return proc.pid
     
     def react_with_reports(self,reports, pid):
-        print(reports)
+        #print(reports)
         self.reports_history[pid].append(reports)
-        solution = self.P.next_step(reports,len(self.running_process))
+        solution = self.P.next_step(reports,len(self.running_process),pid)
                 
         if solution['stop_list'] != []:
             for pid_to_kill in solution['stop_list']:
@@ -77,8 +83,6 @@ class executer:
                 #if len(self.running_process) < self.max_exps:
                 pid = self.start_exp(experments_setting_to_start)
                 self.settings[pid] = experments_setting_to_start
-                #else:
-                #    return False
         return True
     
     def check_reports(self):
@@ -91,7 +95,7 @@ class executer:
             #get lastest line by pid
             output = process.stdout
             report  = output.readline().strip().decode("utf-8").split('\n')[-1]
-            print("Checking "+ str(pid) + " Report: "+report)
+            #print("Checking "+ str(pid) + " Report: "+report)
             if not self.react_with_reports(report,pid):
                 #print("reacting might fail.\n")
                 pass
@@ -102,9 +106,9 @@ class executer:
         
     def stop_exp(self,pid):
         # shell kill pid
+        process_to_be_kill = self.running_process.pop(pid)
         a = os.kill(pid, signal.SIGKILL)
-        print(a)
-        self.running_exps.remove(pid)
+        print('KILL: ',pid)
         
     def start(self):
         #
